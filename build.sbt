@@ -1,57 +1,81 @@
-crossScalaVersions := Seq("2.10.4", "2.11.4")
+import java.util.jar.Attributes
 
-val scalarx = crossProject.settings(
-  organization := "com.lihaoyi",
-  name := "scalarx",
-  scalaVersion := "2.10.4",
-  version := "0.2.8",
+val githubRepo = "scalajs-jsdocgen"
+val osgiVersion = "5.0.0"
 
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
-    "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided"
-  ),
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
-  testFrameworks += new TestFramework("utest.runner.Framework"),
-  autoCompilerPlugins := true,
-  // Sonatype
-
-  publishTo := Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
-
-  pomExtra :=
-    <url>https://github.com/lihaoyi/scalatags</url>
-      <licenses>
-        <license>
-          <name>MIT license</name>
-          <url>http://www.opensource.org/licenses/mit-license.php</url>
-        </license>
-      </licenses>
-      <scm>
-        <url>git://github.com/lihaoyi/scalatags.git</url>
-        <connection>scm:git://github.com/lihaoyi/scalatags.git</connection>
-      </scm>
+lazy val commonSettings = Seq(
+  organization := "com.github.maprohu",
+  version := "0.2.8-SNAPSHOT",
+  publishMavenStyle := true,
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  },
+  pomIncludeRepository := { _ => false },
+  licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
+  homepage := Some(url(s"https://github.com/maprohu/${githubRepo}")),
+  pomExtra := (
+    <scm>
+      <url>git@github.com:maprohu/{githubRepo}.git</url>
+      <connection>scm:git:git@github.com:maprohu/{githubRepo}.git</connection>
+    </scm>
       <developers>
         <developer>
-          <id>lihaoyi</id>
-          <name>Li Haoyi</name>
-          <url>https://github.com/lihaoyi</url>
+          <id>maprohu</id>
+          <name>maprohu</name>
+          <url>https://github.com/maprohu</url>
         </developer>
       </developers>
+    ),
 
-).jsSettings(
-  libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.7.0" % "provided"
+  scalaVersion := "2.11.7",
+  OsgiKeys.additionalHeaders ++= Map(
+    "-noee" -> "true",
+    Attributes.Name.IMPLEMENTATION_VERSION.toString -> version.value
   ),
-  scalaJSStage in Test := FullOptStage,
-  scalacOptions ++= (if (isSnapshot.value) Seq.empty else Seq({
-    val a = baseDirectory.value.toURI.toString.replaceFirst("[^/]+/?$", "")
-    val g = "https://raw.githubusercontent.com/lihaoyi/scala.rx"
-    s"-P:scalajs:mapSourceURI:$a->$g/v${version.value}/"
-  }))
-).jvmSettings(
+  publishArtifact in packageDoc := false,
+  OsgiKeys.exportPackage := Seq(name.value.replaceAll("-", ".")),
+  OsgiKeys.privatePackage := OsgiKeys.exportPackage.value.map(_ + ".impl"),
+  OsgiKeys.bundleActivator := Some(OsgiKeys.privatePackage.value(0) + ".Activator"),
   libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % "2.3.2" % "provided"
+    "org.osgi" % "org.osgi.core" % osgiVersion % Provided
   )
 )
-lazy val js = scalarx.js
+
+lazy val root = (project in file("."))
+  .aggregate(jvm)
+  .settings(
+    publishArtifact := false,
+    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+  )
+
+val scalarx = crossProject.enablePlugins(SbtOsgi).settings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
+      "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided"
+    ),
+    addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+    autoCompilerPlugins := true
+  )
+  .jvmSettings(
+    commonSettings:_*
+  )
+  .jvmSettings(
+    osgiSettings:_*
+  )
+  .jvmSettings(
+    OsgiKeys.bundleActivator := None,
+    OsgiKeys.privatePackage := Seq(),
+    OsgiKeys.exportPackage := Seq(
+      "rx.*"
+    ),
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor" % "2.3.2" % "provided"
+    )
+  )
 
 lazy val jvm = scalarx.jvm

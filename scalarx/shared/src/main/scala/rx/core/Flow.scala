@@ -34,12 +34,12 @@ sealed trait Node{
  * [[Reactor]]s which need to be pinged when an event is fired.
  */
 trait Emitter[+T] extends Node{
-  private[this] val childrenHolder = SpinSet[Set[WeakReference[Reactor[_]]]](Set.empty)
+  private[this] val childrenHolder = SpinSet[Set[Reactor[_]]](Set.empty)
   /**
    * Returns the list of [[Reactor]]s which are currently bound to this [[Emitter]].
    */
   def children: Set[Reactor[_]] = {
-    childrenHolder().flatMap(_.get).filter(_.parents.contains(this))
+    childrenHolder().filter(_.parents.contains(this))
   }
 
   /**
@@ -58,10 +58,7 @@ trait Emitter[+T] extends Node{
    */
   def linkChild[R >: T](child: Reactor[R]): Unit = {
     childrenHolder.spinSet{c =>
-      val newC = c.filter(_.get != None)
-      val someChild = Some(child)
-      if (newC.exists(_.get == someChild)) newC
-      else newC + WeakReference(child)
+      c + child
     }
   }
 
@@ -69,7 +66,7 @@ trait Emitter[+T] extends Node{
    * Manually unbinds the [[Reactor]] `child` to this [[Emitter]].
    */
   def unlinkChild(child: Reactor[_]): Unit = {
-    childrenHolder.spinSet(c => c.filter(_.get != Some(child)))
+    childrenHolder.spinSet(c => c - child)
   }
 }
 

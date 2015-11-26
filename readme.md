@@ -1,3 +1,15 @@
+WeakReference-s were not working as (I) expected in an OSGI
+ container. This repack removes the use of them.
+ That makes Reactor.kill() mandatory also in the JVM.
+ Also adds Osgi metadata to Meta-INF. Skips scala.js build.
+
+Full respect to the original author.
+
+
+.....
+
+
+
 Scala.Rx 0.2.8
 ==============
 
