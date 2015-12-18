@@ -5,7 +5,7 @@ val osgiVersion = "5.0.0"
 
 lazy val commonSettings = Seq(
   organization := "com.github.maprohu",
-  version := "0.2.8-SNAPSHOT",
+  version := "0.2.8",
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -31,6 +31,7 @@ lazy val commonSettings = Seq(
       </developers>
     ),
 
+  crossPaths := false,
   scalaVersion := "2.11.7",
   OsgiKeys.additionalHeaders ++= Map(
     "-noee" -> "true",
