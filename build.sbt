@@ -12,8 +12,10 @@ lazy val commonSettings = Seq(
     if (isSnapshot.value)
       Some("snapshots" at nexus + "content/repositories/snapshots")
     else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+      Some(sbtglobal.SbtGlobals.devops)
+//      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
+  credentials += sbtglobal.SbtGlobals.devopsCredentials,
   pomIncludeRepository := { _ => false },
   licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
   homepage := Some(url(s"https://github.com/maprohu/${githubRepo}")),
@@ -47,13 +49,14 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root = (project in file("."))
-  .aggregate(jvm)
+  .aggregate(scalarxJVM)
   .settings(
     publishArtifact := false,
     publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
   )
 
 val scalarx = crossProject.enablePlugins(SbtOsgi).settings(
+    name := "scalarx",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
       "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided"
@@ -79,4 +82,4 @@ val scalarx = crossProject.enablePlugins(SbtOsgi).settings(
     )
   )
 
-lazy val jvm = scalarx.jvm
+lazy val scalarxJVM = scalarx.jvm
