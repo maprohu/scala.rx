@@ -45,7 +45,9 @@ lazy val commonSettings = Seq(
   OsgiKeys.bundleActivator := Some(OsgiKeys.privatePackage.value(0) + ".Activator"),
   libraryDependencies ++= Seq(
     "org.osgi" % "org.osgi.core" % osgiVersion % Provided
-  )
+  ),
+  javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
+  scalacOptions += "-target:jvm-1.6"
 )
 
 lazy val root = (project in file("."))
