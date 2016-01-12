@@ -7,16 +7,8 @@ lazy val commonSettings = Seq(
   organization := "com.github.maprohu",
   version := "0.2.8",
   publishMavenStyle := true,
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some(sbtglobal.SbtGlobals.devops)
-//      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  },
-  credentials += sbtglobal.SbtGlobals.devopsCredentials,
   pomIncludeRepository := { _ => false },
+  publishTo := Some("gitrepo" at "http://localhost:38084/releases"),
   licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
   homepage := Some(url(s"https://github.com/maprohu/${githubRepo}")),
   pomExtra := (
